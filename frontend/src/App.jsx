@@ -1,9 +1,10 @@
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import ProtectedRoute from './auth/ProtectedRoute.jsx'
 import PublicLayout from './layouts/PublicLayout.jsx'
 import HomePage from './pages/HomePage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import NotFoundPage from './pages/NotFoundPage.jsx'
+import NovelDetailPage from './pages/NovelDetailPage.jsx'
 import PlaceholderPage from './pages/PlaceholderPage.jsx'
 import ProfilePage from './pages/ProfilePage.jsx'
 import RegisterPage from './pages/RegisterPage.jsx'
@@ -14,11 +15,14 @@ export default function App() {
     <Routes>
       <Route element={<PublicLayout />}>
         <Route index element={<HomePage />} />
-        <Route path="tim-kiem" element={<PlaceholderPage title="Tìm truyện" />} />
+        <Route path="tim-kiem" element={<Navigate to="/" replace />} />
+        <Route path="truyen/:slug" element={<NovelDetailPage />} />
         <Route path="dang-nhap" element={<LoginPage />} />
         <Route path="dang-ky" element={<RegisterPage />} />
         <Route element={<ProtectedRoute />}>
           <Route path="ho-so" element={<ProfilePage />} />
+          <Route path="tu-sach" element={<PlaceholderPage title="Tủ sách" />} />
+          <Route path="goi-y" element={<PlaceholderPage title="Gợi ý cho bạn" />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Route>
