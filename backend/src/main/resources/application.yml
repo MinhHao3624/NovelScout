@@ -48,6 +48,8 @@ management:
 
 app:
   frontend-url: ${FRONTEND_URL:http://localhost:5173}
+  demo-data:
+    enabled: ${DEMO_DATA_ENABLED:true}
   crawler:
     enabled: ${CRAWLER_ENABLED:false}
     default-delay-ms: ${CRAWLER_DEFAULT_DELAY_MS:1500}
