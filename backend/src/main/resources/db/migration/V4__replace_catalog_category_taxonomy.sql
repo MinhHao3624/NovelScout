@@ -1,0 +1,22 @@
+DELETE FROM novel_categories;
+DELETE FROM categories;
+
+INSERT INTO categories (name, slug) VALUES ('Văn học Việt Nam', 'van-hoc-viet-nam');
+INSERT INTO categories (name, slug) VALUES ('Văn học nước ngoài', 'van-hoc-nuoc-ngoai');
+INSERT INTO categories (name, slug) VALUES ('Hiện thực xã hội', 'hien-thuc-xa-hoi');
+INSERT INTO categories (name, slug) VALUES ('Tâm lý', 'tam-ly');
+INSERT INTO categories (name, slug) VALUES ('Tình cảm', 'tinh-cam');
+INSERT INTO categories (name, slug) VALUES ('Gia đình', 'gia-dinh');
+INSERT INTO categories (name, slug) VALUES ('Đạo lý – nhân quả', 'dao-ly-nhan-qua');
+INSERT INTO categories (name, slug) VALUES ('Lịch sử', 'lich-su');
+INSERT INTO categories (name, slug) VALUES ('Chiến tranh', 'chien-tranh');
+INSERT INTO categories (name, slug) VALUES ('Phiêu lưu', 'phieu-luu');
+INSERT INTO categories (name, slug) VALUES ('Trinh thám', 'trinh-tham');
+INSERT INTO categories (name, slug) VALUES ('Tội phạm', 'toi-pham');
+INSERT INTO categories (name, slug) VALUES ('Báo thù', 'bao-thu');
+INSERT INTO categories (name, slug) VALUES ('Bi kịch', 'bi-kich');
+INSERT INTO categories (name, slug) VALUES ('Hài hước – trào phúng', 'hai-huoc-trao-phung');
+INSERT INTO categories (name, slug) VALUES ('Thân phận phụ nữ', 'than-phan-phu-nu');
+INSERT INTO categories (name, slug) VALUES ('Nghĩa hiệp', 'nghia-hiep');
+INSERT INTO categories (name, slug) VALUES ('Phong tục', 'phong-tuc');
+INSERT INTO categories (name, slug) VALUES ('Nông thôn', 'nong-thon');

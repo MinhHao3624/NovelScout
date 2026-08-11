@@ -8,9 +8,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.Optional;
+import java.util.Collection;
+import java.util.List;
 
 public interface NovelRepository extends JpaRepository<Novel, Long>, JpaSpecificationExecutor<Novel> {
     boolean existsBySlug(String slug);
+
+    Optional<Novel> findBySourceUrl(String sourceUrl);
+
+    long countBySourceName(String sourceName);
+
+    List<Novel> findAllBySlugInAndSourceUrlIsNull(Collection<String> slugs);
 
     @EntityGraph(attributePaths = {"author", "categories"})
     Optional<Novel> findBySlugAndPublicationStatus(String slug, PublicationStatus publicationStatus);

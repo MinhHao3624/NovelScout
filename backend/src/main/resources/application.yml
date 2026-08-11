@@ -49,10 +49,19 @@ management:
 app:
   frontend-url: ${FRONTEND_URL:http://localhost:5173}
   demo-data:
-    enabled: ${DEMO_DATA_ENABLED:true}
+    enabled: ${DEMO_DATA_ENABLED:false}
+    cleanup-after-real-import: ${DEMO_CLEANUP_AFTER_REAL_IMPORT:false}
   crawler:
     enabled: ${CRAWLER_ENABLED:false}
-    default-delay-ms: ${CRAWLER_DEFAULT_DELAY_MS:1500}
+    default-delay-ms: ${CRAWLER_DEFAULT_DELAY_MS:1000}
+    wikisource:
+      base-url: https://vi.wikisource.org
+      user-agent: ${WIKISOURCE_USER_AGENT:NovelScoutBot/0.1 (https://github.com/MinhHao3624/NovelScout; academic project)}
+      max-attempts: ${WIKISOURCE_MAX_ATTEMPTS:3}
+      manifest: classpath:crawler/wikisource-vi-manifest.json
+      taxonomy: classpath:crawler/wikisource-vi-taxonomy.json
+      import-on-startup: ${WIKISOURCE_IMPORT_ON_STARTUP:false}
+      max-works: ${WIKISOURCE_MAX_WORKS:0}
   recommendation:
     content-weight: ${RECOMMENDATION_CONTENT_WEIGHT:0.45}
     collaborative-weight: ${RECOMMENDATION_COLLABORATIVE_WEIGHT:0.45}

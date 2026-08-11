@@ -34,11 +34,11 @@ class CatalogIntegrationTests {
         novelRepository.deleteAll();
         authorRepository.deleteAll();
         Category mystery = categoryRepository.findBySlug("trinh-tham").orElseThrow();
-        Category urban = categoryRepository.findBySlug("do-thi").orElseThrow();
+        Category socialRealism = categoryRepository.findBySlug("hien-thuc-xa-hoi").orElseThrow();
         Author author = authorRepository.save(new Author("Minh Dư", "minh-du", "Tác giả thử nghiệm"));
         novelRepository.save(Novel.published("Hồ Sơ Mưa Đen", "ho-so-mua-den", author,
                 "Một vụ án không có nạn nhân.", NovelStatus.ONGOING, 200,
-                new BigDecimal("4.80"), 12, Set.of(mystery, urban)));
+                new BigDecimal("4.80"), 12, Set.of(mystery, socialRealism)));
     }
 
     @Test
