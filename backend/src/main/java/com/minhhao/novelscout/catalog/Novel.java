@@ -55,6 +55,18 @@ public class Novel {
     @Column(name = "source_url", length = 512)
     private String sourceUrl;
 
+    @Column(name = "source_name", length = 64)
+    private String sourceName;
+
+    @Column(name = "source_license", length = 128)
+    private String sourceLicense;
+
+    @Column(name = "source_attribution_url", length = 512)
+    private String sourceAttributionUrl;
+
+    @Column(name = "imported_at")
+    private Instant importedAt;
+
     @Column(name = "view_count", nullable = false)
     private long viewCount;
 
@@ -99,12 +111,54 @@ public class Novel {
         return novel;
     }
 
+    public static Novel imported(String title, String slug, Author author, String description,
+                                 String sourceUrl, String sourceName, String sourceLicense,
+                                 Set<Category> categories) {
+        Novel novel = new Novel();
+        novel.title = title;
+        novel.slug = slug;
+        novel.author = author;
+        novel.description = description;
+        novel.novelStatus = NovelStatus.COMPLETED;
+        novel.publicationStatus = PublicationStatus.PUBLISHED;
+        novel.sourceUrl = sourceUrl;
+        novel.sourceName = sourceName;
+        novel.sourceLicense = sourceLicense;
+        novel.sourceAttributionUrl = sourceUrl;
+        novel.importedAt = Instant.now();
+        novel.categories.addAll(categories);
+        return novel;
+    }
+
+    public void updateImportedMetadata(String title, Author author, String description,
+                                       String sourceName, String sourceLicense, Set<Category> categories) {
+        this.title = title;
+        this.author = author;
+        this.description = description;
+        this.sourceName = sourceName;
+        this.sourceLicense = sourceLicense;
+        this.sourceAttributionUrl = sourceUrl;
+        this.importedAt = Instant.now();
+        this.publicationStatus = PublicationStatus.PUBLISHED;
+        this.categories.clear();
+        this.categories.addAll(categories);
+    }
+
+    public void replaceCategories(Set<Category> categories) {
+        this.categories.clear();
+        this.categories.addAll(categories);
+    }
+
     public Long getId() { return id; }
     public String getTitle() { return title; }
     public String getSlug() { return slug; }
     public Author getAuthor() { return author; }
     public String getDescription() { return description; }
     public String getCoverUrl() { return coverUrl; }
+    public String getSourceUrl() { return sourceUrl; }
+    public String getSourceName() { return sourceName; }
+    public String getSourceLicense() { return sourceLicense; }
+    public String getSourceAttributionUrl() { return sourceAttributionUrl; }
     public NovelStatus getNovelStatus() { return novelStatus; }
     public long getViewCount() { return viewCount; }
     public BigDecimal getAverageRating() { return averageRating; }

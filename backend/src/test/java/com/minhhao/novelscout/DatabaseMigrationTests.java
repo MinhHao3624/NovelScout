@@ -19,6 +19,11 @@ class DatabaseMigrationTests {
         Integer categoryCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM categories", Integer.class);
 
         assertThat(roleCount).isEqualTo(2);
-        assertThat(categoryCount).isEqualTo(7);
+        assertThat(categoryCount).isEqualTo(19);
+
+        Integer importTableCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'crawl_import_runs'",
+                Integer.class);
+        assertThat(importTableCount).isEqualTo(1);
     }
 }

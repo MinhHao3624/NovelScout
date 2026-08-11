@@ -20,7 +20,10 @@ public record NovelDetailResponse(
         BigDecimal averageRating,
         long ratingCount,
         Instant publishedAt,
-        Instant updatedAt
+        Instant updatedAt,
+        String sourceName,
+        String sourceLicense,
+        String sourceAttributionUrl
 ) {
     public static NovelDetailResponse from(Novel novel) {
         return new NovelDetailResponse(
@@ -30,6 +33,7 @@ public record NovelDetailResponse(
                 novel.getDescription(), novel.getCoverUrl(), novel.getNovelStatus().name(),
                 novel.getCategories().stream().map(CategoryResponse::from).toList(),
                 novel.getViewCount(), novel.getAverageRating(), novel.getRatingCount(),
-                novel.getPublishedAt(), novel.getUpdatedAt());
+                novel.getPublishedAt(), novel.getUpdatedAt(), novel.getSourceName(),
+                novel.getSourceLicense(), novel.getSourceAttributionUrl());
     }
 }

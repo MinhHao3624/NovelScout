@@ -35,6 +35,12 @@ public class Chapter {
     @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String content;
 
+    @Column(name = "content_format", nullable = false, length = 16)
+    private String contentFormat = "HTML";
+
+    @Column(name = "source_url", length = 512)
+    private String sourceUrl;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "publication_status", nullable = false, length = 32)
     private PublicationStatus publicationStatus;
@@ -53,8 +59,31 @@ public class Chapter {
 
     protected Chapter() {}
 
+    public static Chapter imported(Novel novel, String title, BigDecimal chapterNumber,
+                                   String content, String sourceUrl) {
+        Chapter chapter = new Chapter();
+        chapter.novel = novel;
+        chapter.title = title;
+        chapter.chapterNumber = chapterNumber;
+        chapter.content = content;
+        chapter.contentFormat = "HTML";
+        chapter.sourceUrl = sourceUrl;
+        chapter.publicationStatus = PublicationStatus.PUBLISHED;
+        chapter.publishedAt = Instant.now();
+        return chapter;
+    }
+
+    public void updateImportedContent(String title, String content) {
+        this.title = title;
+        this.content = content;
+        this.contentFormat = "HTML";
+        this.publicationStatus = PublicationStatus.PUBLISHED;
+    }
+
     public Long getId() { return id; }
     public Novel getNovel() { return novel; }
     public String getTitle() { return title; }
     public BigDecimal getChapterNumber() { return chapterNumber; }
+    public String getContent() { return content; }
+    public String getSourceUrl() { return sourceUrl; }
 }
