@@ -29,6 +29,9 @@ export default function NovelDetailPage() {
           <p className="detail-author">bởi {novel.authorName}</p>
           <div className="category-list">{novel.categories.map((category) => <span key={category.id}>{category.name}</span>)}</div>
           <p className="detail-description">{novel.description}</p>
+          {novel.sourceAttributionUrl && (
+            <p className="source-attribution">Nguồn: <a href={novel.sourceAttributionUrl} target="_blank" rel="noreferrer">Wikisource tiếng Việt ↗</a> · {novel.sourceLicense === 'PUBLIC_DOMAIN' ? 'Phạm vi công cộng' : 'CC BY-SA'}</p>
+          )}
           <div className="detail-actions"><button className="button" disabled>Chương truyện sắp ra mắt</button><span>{novel.viewCount.toLocaleString('vi-VN')} lượt đọc</span></div>
         </div>
       </div>
