@@ -7,6 +7,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
 import java.util.Optional;
 import java.util.Collection;
 import java.util.List;
@@ -26,4 +30,9 @@ public interface NovelRepository extends JpaRepository<Novel, Long>, JpaSpecific
     @Override
     @EntityGraph(attributePaths = {"author"})
     Page<Novel> findAll(Specification<Novel> specification, Pageable pageable);
+
+    @Modifying
+    @Query("UPDATE Novel n SET n.viewCount = n.viewCount + 1 WHERE n.slug = :slug")
+    void incrementViewCount(@Param("slug") String slug);
 }
+
