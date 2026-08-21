@@ -2,6 +2,8 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import ProtectedRoute from './auth/ProtectedRoute.jsx'
 import PublicLayout from './layouts/PublicLayout.jsx'
 import HomePage from './pages/HomePage.jsx'
+import SearchPage from './pages/SearchPage.jsx'
+import ChapterReaderPage from './pages/ChapterReaderPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import NotFoundPage from './pages/NotFoundPage.jsx'
 import NovelDetailPage from './pages/NovelDetailPage.jsx'
@@ -15,9 +17,12 @@ export default function App() {
     <Routes>
       <Route element={<PublicLayout />}>
         <Route index element={<HomePage />} />
-        <Route path="tim-kiem" element={<Navigate to="/" replace />} />
+        <Route path="tim-kiem" element={<SearchPage />} />
         <Route path="truyen/:slug" element={<NovelDetailPage />} />
+        <Route path="truyen/:slug/chuong/:chapterNumber" element={<ChapterReaderPage />} />
+        <Route path="truyen/:slug/:chapterPath" element={<ChapterReaderPage />} />
         <Route path="dang-nhap" element={<LoginPage />} />
+
         <Route path="dang-ky" element={<RegisterPage />} />
         <Route element={<ProtectedRoute />}>
           <Route path="ho-so" element={<ProfilePage />} />
@@ -29,3 +34,4 @@ export default function App() {
     </Routes>
   )
 }
+

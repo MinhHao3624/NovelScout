@@ -13,4 +13,8 @@ export const catalogApi = {
   featured: (limit = 4) => apiRequest(`/public/catalog/featured?limit=${limit}`),
   novels: (params) => apiRequest(`/public/catalog/novels?${queryString(params)}`),
   novel: (slug) => apiRequest(`/public/catalog/novels/${slug}`),
+  chapters: (slug) => apiRequest(`/public/catalog/novels/${slug}/chapters`),
+  chapter: (slug, chapterNumber) => apiRequest(`/public/catalog/novels/${slug}/chapters/${chapterNumber}`),
+  incrementView: (slug) => apiRequest(`/public/catalog/novels/${slug}/view`, { method: 'POST' }),
 }
+

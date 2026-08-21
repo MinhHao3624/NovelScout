@@ -86,4 +86,8 @@ public class Chapter {
     public BigDecimal getChapterNumber() { return chapterNumber; }
     public String getContent() { return content; }
     public String getSourceUrl() { return sourceUrl; }
+    public Instant getPublishedAt() { return publishedAt; }
+    public Instant getCreatedAt() { return createdAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
 }
+

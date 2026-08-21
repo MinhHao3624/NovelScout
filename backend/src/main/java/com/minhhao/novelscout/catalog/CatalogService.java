@@ -1,6 +1,8 @@
 package com.minhhao.novelscout.catalog;
 
 import com.minhhao.novelscout.catalog.dto.CategoryResponse;
+import com.minhhao.novelscout.catalog.dto.ChapterDetailResponse;
+import com.minhhao.novelscout.catalog.dto.ChapterSummaryResponse;
 import com.minhhao.novelscout.catalog.dto.NovelDetailResponse;
 import com.minhhao.novelscout.catalog.dto.NovelSummaryResponse;
 import com.minhhao.novelscout.catalog.dto.PageResponse;
@@ -12,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Locale;
 
@@ -19,10 +22,12 @@ import java.util.Locale;
 public class CatalogService {
     private final NovelRepository novelRepository;
     private final CategoryRepository categoryRepository;
+    private final ChapterRepository chapterRepository;
 
-    public CatalogService(NovelRepository novelRepository, CategoryRepository categoryRepository) {
+    public CatalogService(NovelRepository novelRepository, CategoryRepository categoryRepository, ChapterRepository chapterRepository) {
         this.novelRepository = novelRepository;
         this.categoryRepository = categoryRepository;
+        this.chapterRepository = chapterRepository;
     }
 
     @Transactional(readOnly = true)
@@ -55,6 +60,37 @@ public class CatalogService {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "NOVEL_NOT_FOUND", "Không tìm thấy truyện"));
     }
 
+    @Transactional(readOnly = true)
+    public List<ChapterSummaryResponse> getNovelChapters(String slug) {
+        return chapterRepository.findByNovelSlugAndPublicationStatusOrderByChapterNumberAsc(slug, PublicationStatus.PUBLISHED)
+                .stream()
+                .map(ChapterSummaryResponse::from)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public ChapterDetailResponse getChapterDetail(String slug, BigDecimal chapterNumber) {
+        Chapter chapter = chapterRepository.findByNovelSlugAndChapterNumberAndPublicationStatus(slug, chapterNumber, PublicationStatus.PUBLISHED)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "CHAPTER_NOT_FOUND", "Không tìm thấy chương truyện"));
+
+        BigDecimal prevChapterNum = chapterRepository.findFirstByNovelSlugAndChapterNumberLessThanAndPublicationStatusOrderByChapterNumberDesc(slug, chapterNumber, PublicationStatus.PUBLISHED)
+                .map(Chapter::getChapterNumber)
+                .orElse(null);
+
+        BigDecimal nextChapterNum = chapterRepository.findFirstByNovelSlugAndChapterNumberGreaterThanAndPublicationStatusOrderByChapterNumberAsc(slug, chapterNumber, PublicationStatus.PUBLISHED)
+                .map(Chapter::getChapterNumber)
+                .orElse(null);
+
+        long totalChapters = chapterRepository.countByNovelSlugAndPublicationStatus(slug, PublicationStatus.PUBLISHED);
+
+        return ChapterDetailResponse.of(chapter, prevChapterNum, nextChapterNum, totalChapters);
+    }
+
+    @Transactional
+    public void incrementViewCount(String slug) {
+        novelRepository.incrementViewCount(slug);
+    }
+
     private NovelStatus parseStatus(String status) {
         if (status == null || status.isBlank()) return null;
         try {
@@ -73,3 +109,4 @@ public class CatalogService {
         };
     }
 }
+
