@@ -27,7 +27,6 @@ export default function PublicLayout() {
         <NavLink className="brand" to="/" aria-label="NovelScout - Trang chủ"><span className="brand-mark">N</span><span>NovelScout</span></NavLink>
         <nav className="main-nav" aria-label="Điều hướng chính">
           <NavLink to="/" end>Trang chủ</NavLink>
-          <Link to="/#the-loai">Thể loại</Link>
           <NavLink to="/tu-sach">Tủ sách</NavLink>
           <NavLink to="/goi-y">Gợi ý</NavLink>
         </nav>
