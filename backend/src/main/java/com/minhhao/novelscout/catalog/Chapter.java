@@ -80,6 +80,14 @@ public class Chapter {
         this.publicationStatus = PublicationStatus.PUBLISHED;
     }
 
+    public void updateInfo(String title, BigDecimal chapterNumber, String content) {
+        this.title = title;
+        this.chapterNumber = chapterNumber;
+        this.content = content;
+        this.publicationStatus = PublicationStatus.PUBLISHED;
+    }
+
+
     public Long getId() { return id; }
     public Novel getNovel() { return novel; }
     public String getTitle() { return title; }

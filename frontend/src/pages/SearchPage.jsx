@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { catalogApi } from '../api/catalog.js'
+import { catalogApi, getNovelCoverUrl } from '../api/catalog.js'
 import FilterSelect from '../components/FilterSelect.jsx'
 
 const statusLabels = {
+  ALL: 'Tất cả trạng thái',
   ONGOING: 'Đang ra',
   COMPLETED: 'Hoàn thành',
-  HIATUS: 'Tạm dừng',
+  HIATUS: 'Tạm dừng'
 }
 
 function NovelCover({ novel }) {
@@ -20,10 +21,13 @@ function NovelCover({ novel }) {
 }
 
 function NovelCard({ novel }) {
+  const [imgError, setImgError] = useState(false)
+  const coverUrl = getNovelCoverUrl(novel)
+
   return (
     <Link className="novel-card" to={`/truyen/${novel.slug}`}>
-      {novel.coverUrl
-        ? <img className="novel-cover novel-cover-image" src={novel.coverUrl} alt={`Bìa ${novel.title}`} />
+      {coverUrl && !imgError
+        ? <img className="novel-cover novel-cover-image" src={coverUrl} alt={`Bìa ${novel.title}`} onError={() => setImgError(true)} />
         : <NovelCover novel={novel} />}
       <div className="novel-card-copy">
         <div className="novel-meta">
@@ -42,6 +46,7 @@ function NovelCard({ novel }) {
     </Link>
   )
 }
+
 
 function LoadingCards({ count = 12 }) {
   return (

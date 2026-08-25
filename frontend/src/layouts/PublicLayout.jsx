@@ -7,6 +7,8 @@ export default function PublicLayout() {
   const [headerQuery, setHeaderQuery] = useState('')
   const navigate = useNavigate()
 
+  const isAdmin = user?.roles && (user.roles.includes('ADMIN') || user.roles.includes('ROLE_ADMIN'))
+
   async function handleLogout() {
     await logout()
     navigate('/')
@@ -25,7 +27,6 @@ export default function PublicLayout() {
         <NavLink className="brand" to="/" aria-label="NovelScout - Trang chủ"><span className="brand-mark">N</span><span>NovelScout</span></NavLink>
         <nav className="main-nav" aria-label="Điều hướng chính">
           <NavLink to="/" end>Trang chủ</NavLink>
-          <Link to="/#the-loai">Thể loại</Link>
           <NavLink to="/tu-sach">Tủ sách</NavLink>
           <NavLink to="/goi-y">Gợi ý</NavLink>
         </nav>
@@ -36,6 +37,11 @@ export default function PublicLayout() {
         <div className="header-actions">
           {!loading && user ? (
             <>
+              {isAdmin && (
+                <NavLink className="button button-small admin-badge-btn" to="/admin" style={{ background: '#059669', color: '#fff', border: 'none', marginRight: '8px' }}>
+                  ⚡ Quản trị Admin
+                </NavLink>
+              )}
               <NavLink className="profile-link" to="/ho-so">
                 {user.avatarUrl ? <img className="avatar-small avatar-image" src={user.avatarUrl} alt="" /> : <span className="avatar-small">{(user.displayName || user.username).charAt(0).toUpperCase()}</span>}
                 <span>{user.displayName || user.username}</span>

@@ -8,6 +8,11 @@ function queryString(params) {
   return search.toString()
 }
 
+export const getNovelCoverUrl = (novel) => {
+  if (!novel || !novel.coverUrl || novel.coverUrl.trim() === '') return null
+  return novel.coverUrl
+}
+
 export const catalogApi = {
   categories: () => apiRequest('/public/catalog/categories'),
   featured: (limit = 4) => apiRequest(`/public/catalog/featured?limit=${limit}`),
@@ -17,4 +22,3 @@ export const catalogApi = {
   chapter: (slug, chapterNumber) => apiRequest(`/public/catalog/novels/${slug}/chapters/${chapterNumber}`),
   incrementView: (slug) => apiRequest(`/public/catalog/novels/${slug}/view`, { method: 'POST' }),
 }
-

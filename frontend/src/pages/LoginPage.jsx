@@ -10,15 +10,23 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  if (user) return <Navigate to="/" replace />
+  const isAdminUser = (u) => u?.roles && (u.roles.includes('ADMIN') || u.roles.includes('ROLE_ADMIN'))
+
+  if (user) {
+    return <Navigate to={isAdminUser(user) ? "/admin" : "/"} replace />
+  }
 
   async function handleSubmit(event) {
     event.preventDefault()
     setError('')
     setSubmitting(true)
     try {
-      await login(form)
-      navigate(location.state?.from || '/', { replace: true })
+      const currentUser = await login(form)
+      if (isAdminUser(currentUser)) {
+        navigate('/admin', { replace: true })
+      } else {
+        navigate(location.state?.from || '/', { replace: true })
+      }
     } catch (requestError) {
       setError(requestError.message)
     } finally {

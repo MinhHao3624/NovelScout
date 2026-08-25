@@ -424,12 +424,16 @@ a {
 }
 
 .novel-cover,
-.featured-card > .novel-cover-image {
+.featured-card > .novel-cover-image,
+.novel-cover-image {
+  position: relative;
   width: 100%;
   aspect-ratio: 0.72;
   object-fit: cover;
-  border-radius: 8px 16px 16px 8px;
-  box-shadow: 0 16px 35px rgba(23, 37, 30, 0.13);
+  border-radius: 6px 14px 14px 6px;
+  box-shadow: 4px 14px 30px rgba(23, 37, 30, 0.2), inset 10px 0 15px -6px rgba(0, 0, 0, 0.35);
+  border-left: 5px solid rgba(0, 0, 0, 0.3);
+  transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
 .novel-cover {
@@ -438,6 +442,19 @@ a {
   justify-content: space-between;
   padding: 22px;
   color: var(--white);
+  overflow: hidden;
+}
+
+.novel-cover::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  border: 1px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 4px 10px 10px 4px;
+  pointer-events: none;
 }
 
 .novel-cover span {
@@ -455,14 +472,15 @@ a {
 }
 
 .novel-cover small {
-  opacity: 0.76;
-  font-size: 0.72rem;
+  opacity: 0.85;
+  font-size: 0.75rem;
 }
 
-.cover-tone-1 { background: #1d5b43; }
-.cover-tone-2 { background: #ad754c; }
-.cover-tone-3 { background: #253b51; }
-.cover-tone-4 { background: #6f4050; }
+.cover-tone-1 { background: linear-gradient(145deg, #1d5b43, #123c2c); }
+.cover-tone-2 { background: linear-gradient(145deg, #ad754c, #7a4e2f); }
+.cover-tone-3 { background: linear-gradient(145deg, #253b51, #152433); }
+.cover-tone-4 { background: linear-gradient(145deg, #6f4050, #482733); }
+
 
 .catalog-heading {
   margin-bottom: 34px;

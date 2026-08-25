@@ -80,6 +80,24 @@ public class User {
         return user;
     }
 
+    public static User createAdmin(
+            String email,
+            String username,
+            String passwordHash,
+            String displayName,
+            Role adminRole
+    ) {
+        User user = new User();
+        user.email = email;
+        user.username = username;
+        user.passwordHash = passwordHash;
+        user.displayName = displayName;
+        user.status = UserStatus.ACTIVE;
+        user.roles.add(adminRole);
+        return user;
+    }
+
+
     @PreUpdate
     void updateTimestamp() {
         updatedAt = Instant.now();
