@@ -18,7 +18,10 @@ import java.util.List;
 public interface NovelRepository extends JpaRepository<Novel, Long>, JpaSpecificationExecutor<Novel> {
     boolean existsBySlug(String slug);
 
+    Page<Novel> findByTitleContainingIgnoreCase(String title, Pageable pageable);
+
     Optional<Novel> findBySourceUrl(String sourceUrl);
+
 
     long countBySourceName(String sourceName);
 
@@ -31,8 +34,15 @@ public interface NovelRepository extends JpaRepository<Novel, Long>, JpaSpecific
     @EntityGraph(attributePaths = {"author"})
     Page<Novel> findAll(Specification<Novel> specification, Pageable pageable);
 
+    Optional<Novel> findBySlug(String slug);
+
+    @Modifying
+    @Query("UPDATE Novel n SET n.coverUrl = :coverUrl WHERE n.slug = :slug")
+    void updateCoverUrl(@Param("slug") String slug, @Param("coverUrl") String coverUrl);
+
     @Modifying
     @Query("UPDATE Novel n SET n.viewCount = n.viewCount + 1 WHERE n.slug = :slug")
     void incrementViewCount(@Param("slug") String slug);
 }
+
 

@@ -19,6 +19,9 @@ spring:
           time_zone: Asia/Ho_Chi_Minh
   flyway:
     enabled: true
+    validate-on-migrate: false
+
+
   jackson:
     default-property-inclusion: non_null
   cache:

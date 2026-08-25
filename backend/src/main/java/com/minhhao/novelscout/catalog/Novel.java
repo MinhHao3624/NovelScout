@@ -144,6 +144,22 @@ public class Novel {
         this.categories.addAll(categories);
     }
 
+    public void updateAdminInfo(String title, Author author, String description, NovelStatus status, String coverUrl, Set<Category> categories) {
+        this.title = title;
+        this.author = author;
+        this.description = description;
+        if (status != null) this.novelStatus = status;
+        if (coverUrl != null) this.coverUrl = coverUrl;
+        if (categories != null) {
+            this.categories.clear();
+            this.categories.addAll(categories);
+        }
+    }
+
+    public void setCoverUrl(String coverUrl) {
+        this.coverUrl = coverUrl;
+    }
+
     public void replaceCategories(Set<Category> categories) {
         this.categories.clear();
         this.categories.addAll(categories);

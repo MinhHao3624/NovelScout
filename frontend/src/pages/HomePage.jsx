@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { catalogApi } from '../api/catalog.js'
+import { catalogApi, getNovelCoverUrl } from '../api/catalog.js'
 import FilterSelect from '../components/FilterSelect.jsx'
 
 const statusLabels = {
@@ -20,10 +20,13 @@ function NovelCover({ novel, featured = false }) {
 }
 
 function NovelCard({ novel }) {
+  const [imgError, setImgError] = useState(false)
+  const coverUrl = getNovelCoverUrl(novel)
+
   return (
     <Link className="novel-card" to={`/truyen/${novel.slug}`}>
-      {novel.coverUrl
-        ? <img className="novel-cover novel-cover-image" src={novel.coverUrl} alt={`Bìa ${novel.title}`} />
+      {coverUrl && !imgError
+        ? <img className="novel-cover novel-cover-image" src={coverUrl} alt={`Bìa ${novel.title}`} onError={() => setImgError(true)} />
         : <NovelCover novel={novel} />}
       <div className="novel-card-copy">
         <div className="novel-meta"><span>{statusLabels[novel.status]}</span><span>★ {Number(novel.averageRating).toFixed(1)}</span></div>
@@ -37,6 +40,7 @@ function NovelCard({ novel }) {
     </Link>
   )
 }
+
 
 function LoadingCards({ count = 4 }) {
   return <div className="novel-grid">{Array.from({ length: count }, (_, index) => <div className="novel-skeleton" key={index} />)}</div>
@@ -118,12 +122,16 @@ export default function HomePage() {
         </div>
         {featuredLoading ? <LoadingCards /> : (
           <div className="featured-grid">
-            {featured.map((novel, index) => (
-              <Link className={`featured-card ${index === 0 ? 'featured-primary' : ''}`} to={`/truyen/${novel.slug}`} key={novel.id}>
-                {novel.coverUrl ? <img className="novel-cover-image" src={novel.coverUrl} alt="" /> : <NovelCover novel={novel} featured />}
-                <div><span className="featured-number">0{index + 1}</span><h3>{novel.title}</h3><p>{novel.authorName}</p></div>
-              </Link>
-            ))}
+            {featured.map((novel, index) => {
+              const cover = getNovelCoverUrl(novel)
+              return (
+                <Link className={`featured-card ${index === 0 ? 'featured-primary' : ''}`} to={`/truyen/${novel.slug}`} key={novel.id}>
+                  {cover ? <img className="novel-cover-image" src={cover} alt={`Bìa ${novel.title}`} /> : <NovelCover novel={novel} featured />}
+                  <div><span className="featured-number">0{index + 1}</span><h3>{novel.title}</h3><p>{novel.authorName}</p></div>
+                </Link>
+              )
+            })}
+
           </div>
         )}
       </section>
