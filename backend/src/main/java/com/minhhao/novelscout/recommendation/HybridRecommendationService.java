@@ -6,8 +6,8 @@ import com.minhhao.novelscout.catalog.dto.NovelSummaryResponse;
 import com.minhhao.novelscout.common.api.ApiException;
 import com.minhhao.novelscout.interaction.UserInteraction;
 import com.minhhao.novelscout.interaction.UserInteractionRepository;
+import com.minhhao.novelscout.recommendation.dto.AdminRecommendationDto.RecommendationConfigDto;
 import com.minhhao.novelscout.recommendation.dto.RecommendationResponse;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,26 +23,20 @@ public class HybridRecommendationService {
     private final CollaborativeFilteringService cfService;
     private final NovelRepository novelRepository;
     private final UserInteractionRepository userInteractionRepository;
-
-    @Value("${app.recommendation.content-weight:0.45}")
-    private double contentWeight;
-
-    @Value("${app.recommendation.collaborative-weight:0.45}")
-    private double collaborativeWeight;
-
-    @Value("${app.recommendation.popularity-weight:0.10}")
-    private double popularityWeight;
+    private final AdminRecommendationService adminRecommendationService;
 
     public HybridRecommendationService(
             ContentBasedFilteringService cbfService,
             CollaborativeFilteringService cfService,
             NovelRepository novelRepository,
-            UserInteractionRepository userInteractionRepository
+            UserInteractionRepository userInteractionRepository,
+            AdminRecommendationService adminRecommendationService
     ) {
         this.cbfService = cbfService;
         this.cfService = cfService;
         this.novelRepository = novelRepository;
         this.userInteractionRepository = userInteractionRepository;
+        this.adminRecommendationService = adminRecommendationService;
     }
 
     /**
@@ -88,7 +82,10 @@ public class HybridRecommendationService {
             popScores.put(novel.getId(), 0.6 * normView + 0.4 * normRating);
         }
 
-        // 4. Kết hợp Ma trận lai (Hybrid Aggregation)
+        // 4. Lấy cấu hình trọng số thời gian thực từ Admin Service
+        RecommendationConfigDto config = adminRecommendationService.getConfig();
+
+        // 5. Kết hợp Ma trận lai (Hybrid Aggregation)
         List<RecommendationResponse> recommendations = new ArrayList<>();
 
         for (Novel candidate : allNovels) {
@@ -100,8 +97,8 @@ public class HybridRecommendationService {
             double cf = cfScores.getOrDefault(candidate.getId(), 0.0);
             double pop = popScores.getOrDefault(candidate.getId(), 0.0);
 
-            // Công thức Hybrid
-            double hybridScore = contentWeight * cbf + collaborativeWeight * cf + popularityWeight * pop;
+            // Công thức Hybrid với Trọng số Động
+            double hybridScore = config.contentWeight() * cbf + config.collaborativeWeight() * cf + config.popularityWeight() * pop;
 
             int matchPercentage = Math.min(99, Math.max(60, (int) Math.round(hybridScore * 100)));
             String reason = generateReason(cbf, cf, pop, matchPercentage);

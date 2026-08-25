@@ -18,6 +18,7 @@ import AdminLayout from './admin/AdminLayout.jsx'
 import AdminDashboardPage from './admin/AdminDashboardPage.jsx'
 import AdminNovelListPage from './admin/AdminNovelListPage.jsx'
 import AdminChapterListPage from './admin/AdminChapterListPage.jsx'
+import AdminRecommendationPage from './admin/AdminRecommendationPage.jsx'
 
 import './App.css'
 
@@ -48,6 +49,7 @@ export default function App() {
           <Route index element={<AdminDashboardPage />} />
           <Route path="novels" element={<AdminNovelListPage />} />
           <Route path="novels/:novelId/chapters" element={<AdminChapterListPage />} />
+          <Route path="recommendations" element={<AdminRecommendationPage />} />
         </Route>
       </Route>
     </Routes>

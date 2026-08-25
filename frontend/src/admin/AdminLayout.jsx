@@ -29,6 +29,9 @@ export function AdminLayout() {
           <NavLink to="/admin/novels" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
             <span className="nav-icon">📚</span> Quản lý Kho truyện & Bìa
           </NavLink>
+          <NavLink to="/admin/recommendations" className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}>
+            <span className="nav-icon">🧮</span> Quản lý Thuật toán Gợi ý
+          </NavLink>
           <Link to="/" className="nav-item reader-link">
             <span className="nav-icon">📖</span> Về giao diện Độc giả
           </Link>
