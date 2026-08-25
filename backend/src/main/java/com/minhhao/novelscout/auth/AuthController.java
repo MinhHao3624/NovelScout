@@ -2,6 +2,7 @@ package com.minhhao.novelscout.auth;
 
 import com.minhhao.novelscout.auth.dto.*;
 import com.minhhao.novelscout.common.api.ApiException;
+import com.minhhao.novelscout.user.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -26,16 +27,22 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 public class AuthController {
     private final AuthService authService;
+    private final GoogleAuthService googleAuthService;
     private final AuthenticationManager authenticationManager;
     private final SecurityContextRepository securityContextRepository;
     private final SessionAuthenticationStrategy sessionAuthenticationStrategy;
     private final CsrfTokenRepository csrfTokenRepository;
 
-    public AuthController(AuthService authService, AuthenticationManager authenticationManager,
-                          SecurityContextRepository securityContextRepository,
-                          SessionAuthenticationStrategy sessionAuthenticationStrategy,
-                          CsrfTokenRepository csrfTokenRepository) {
+    public AuthController(
+            AuthService authService,
+            GoogleAuthService googleAuthService,
+            AuthenticationManager authenticationManager,
+            SecurityContextRepository securityContextRepository,
+            SessionAuthenticationStrategy sessionAuthenticationStrategy,
+            CsrfTokenRepository csrfTokenRepository
+    ) {
         this.authService = authService;
+        this.googleAuthService = googleAuthService;
         this.authenticationManager = authenticationManager;
         this.securityContextRepository = securityContextRepository;
         this.sessionAuthenticationStrategy = sessionAuthenticationStrategy;
@@ -59,7 +66,6 @@ public class AuthController {
             HttpServletRequest httpRequest, HttpServletResponse httpResponse
     ) {
         AuthUserResponse userResponse = authService.registerWithOtp(request);
-        // Tự động đăng nhập người dùng ngay khi đăng ký thành công
         try {
             Authentication authentication = authenticationManager.authenticate(
                     UsernamePasswordAuthenticationToken.unauthenticated(request.username(), request.password()));
@@ -70,9 +76,30 @@ public class AuthController {
             securityContextRepository.saveContext(context, httpRequest, httpResponse);
             csrfTokenRepository.saveToken(null, httpRequest, httpResponse);
         } catch (Exception e) {
-            // Không ngắt luồng đăng ký nếu tự động đăng nhập gặp sự cố
+            // Do not break flow if auto-login fails
         }
         return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
+    }
+
+    @PostMapping("/google")
+    ResponseEntity<AuthUserResponse> googleLogin(
+            @Valid @RequestBody GoogleAuthRequest request,
+            HttpServletRequest httpRequest, HttpServletResponse httpResponse
+    ) {
+        User user = googleAuthService.authenticateGoogleUser(request.credential());
+        CustomUserPrincipal principal = CustomUserPrincipal.from(user);
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                principal,
+                null,
+                principal.getAuthorities()
+        );
+        sessionAuthenticationStrategy.onAuthentication(authentication, httpRequest, httpResponse);
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(authentication);
+        SecurityContextHolder.setContext(context);
+        securityContextRepository.saveContext(context, httpRequest, httpResponse);
+        csrfTokenRepository.saveToken(null, httpRequest, httpResponse);
+        return ResponseEntity.ok(AuthUserResponse.from(user));
     }
 
     @PostMapping("/register")

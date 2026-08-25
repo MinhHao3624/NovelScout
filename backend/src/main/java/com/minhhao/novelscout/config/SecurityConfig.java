@@ -31,7 +31,7 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(csrfTokenRepository)
-                        .ignoringRequestMatchers("/api/auth/send-otp", "/api/auth/register-with-otp", "/api/auth/register", "/api/auth/login")
+                        .ignoringRequestMatchers("/api/auth/send-otp", "/api/auth/register-with-otp", "/api/auth/register", "/api/auth/login", "/api/auth/google")
                         .spa())
                 .securityContext(context -> context
                         .requireExplicitSave(true)

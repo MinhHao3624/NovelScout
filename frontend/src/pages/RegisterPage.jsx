@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { authApi } from '../api/auth.js'
 import { useAuth } from '../auth/authContext.js'
+import GoogleLoginButton from '../components/GoogleLoginButton.jsx'
 
 const initialForm = { displayName: '', username: '', email: '', password: '', confirmPassword: '', otpCode: '' }
 
@@ -82,7 +83,6 @@ export default function RegisterPage() {
       const { confirmPassword, ...payload } = form
       void confirmPassword
       await authApi.registerWithOtp(payload)
-      // Tự động chuyển hướng hoặc đăng nhập
       window.location.href = '/'
     } catch (requestError) {
       setError(requestError.message)
@@ -102,10 +102,16 @@ export default function RegisterPage() {
       <div className="auth-panel">
         <p className="eyebrow">Gia nhập NovelScout</p>
         <h1>Tạo không gian đọc của riêng bạn.</h1>
-        <p className="auth-intro">Nhập email để nhận mã xác nhận OTP 6 chữ số bảo mật.</p>
+        <p className="auth-intro">Đăng ký nhanh qua Google hoặc nhận mã xác nhận OTP 6 chữ số.</p>
         
         {successMsg && <div className="form-notice success" role="alert">{successMsg}</div>}
         {error && <div className="form-notice error" role="alert">{error}</div>}
+
+        <GoogleLoginButton onError={(err) => setError(err)} />
+
+        <div className="divider-line" style={{ margin: '16px 0', textTransform: 'uppercase', fontSize: '0.75rem', color: '#94a3b8', textAlign: 'center' }}>
+          <span>HOẶC ĐĂNG KÝ VỚI MÃ OTP EMAIL</span>
+        </div>
 
         <form className="auth-form" onSubmit={handleSubmit}>
           {/* Email input + Send OTP Button */}
