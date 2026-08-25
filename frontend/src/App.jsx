@@ -9,7 +9,7 @@ import BookshelfPage from './pages/BookshelfPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import NotFoundPage from './pages/NotFoundPage.jsx'
 import NovelDetailPage from './pages/NovelDetailPage.jsx'
-import PlaceholderPage from './pages/PlaceholderPage.jsx'
+import RecommendationPage from './pages/RecommendationPage.jsx'
 import ProfilePage from './pages/ProfilePage.jsx'
 import RegisterPage from './pages/RegisterPage.jsx'
 
@@ -31,13 +31,14 @@ export default function App() {
         <Route path="truyen/:slug/chuong/:chapterNumber" element={<ChapterReaderPage />} />
         <Route path="truyen/:slug/:chapterPath" element={<ChapterReaderPage />} />
         <Route path="dang-nhap" element={<LoginPage />} />
-
         <Route path="dang-ky" element={<RegisterPage />} />
+
         <Route element={<ProtectedRoute />}>
           <Route path="ho-so" element={<ProfilePage />} />
           <Route path="tu-sach" element={<BookshelfPage />} />
-          <Route path="goi-y" element={<PlaceholderPage title="Gợi ý cho bạn" />} />
+          <Route path="goi-y" element={<RecommendationPage />} />
         </Route>
+
         <Route path="*" element={<NotFoundPage />} />
       </Route>
 

@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { catalogApi, getNovelCoverUrl } from '../api/catalog.js'
 import { interactionApi } from '../api/interaction.js'
-
+import { getSimilarNovels } from '../api/recommendation.js'
+import NovelCover from '../components/NovelCover.jsx'
 
 const statusLabels = { ONGOING: 'Đang ra', COMPLETED: 'Hoàn thành', HIATUS: 'Tạm dừng' }
 
@@ -12,6 +13,7 @@ export default function NovelDetailPage() {
   const [chapters, setChapters] = useState([])
   const [error, setError] = useState('')
   const [lastRead, setLastRead] = useState(null)
+  const [imgError, setImgError] = useState(false)
 
   // Interactions State
   const [interactionStatus, setInteractionStatus] = useState({ isFavorite: false, favoriteCount: 0, userRating: null, userReview: '' })
@@ -21,6 +23,9 @@ export default function NovelDetailPage() {
   const [reviewInput, setReviewInput] = useState('')
   const [isSubmittingRating, setIsSubmittingRating] = useState(false)
   const [ratingSuccessMsg, setRatingSuccessMsg] = useState('')
+
+  // Similar Novels State
+  const [similarNovels, setSimilarNovels] = useState([])
 
   useEffect(() => {
     // Read local reading history
@@ -38,65 +43,70 @@ export default function NovelDetailPage() {
         setNovel(novelData)
         catalogApi.chapters(slug).then(setChapters).catch((err) => console.error('Lỗi tải chương:', err))
         interactionApi.getStatus(slug)
-          .then((statusData) => {
-            if (statusData) {
-              setInteractionStatus(statusData)
-              if (statusData.userRating) setSelectedScore(statusData.userRating)
-              if (statusData.userReview) setReviewInput(statusData.userReview)
+          .then((status) => {
+            if (status) {
+              setInteractionStatus(status)
+              if (status.userRating) {
+                setSelectedScore(status.userRating)
+              }
+              if (status.userReview) {
+                setReviewInput(status.userReview)
+              }
             }
           })
-          .catch((err) => console.error('Lỗi tải trạng thái tương tác:', err))
+          .catch((err) => console.error('Lỗi trạng thái tương tác:', err))
 
         interactionApi.getRatings(slug)
-          .then((ratingsData) => {
-            if (ratingsData) setRatingsList(ratingsData)
-          })
-          .catch((err) => console.error('Lỗi tải danh sách nhận xét:', err))
+          .then((ratings) => setRatingsList(ratings || []))
+          .catch((err) => console.error('Lỗi danh sách đánh giá:', err))
       })
       .catch((requestError) => setError(requestError.message))
+
+    // Fetch Similar Novels (Content-Based Filtering)
+    getSimilarNovels(slug, 6)
+      .then((data) => setSimilarNovels(data || []))
+      .catch((err) => console.error('Lỗi tải truyện tương tự:', err))
   }, [slug])
 
-
-  const handleToggleFavorite = () => {
-    interactionApi.toggleFavorite(slug)
-      .then((res) => {
-        setInteractionStatus((prev) => ({
-          ...prev,
-          isFavorite: res.isFavorite,
-          favoriteCount: res.isFavorite ? prev.favoriteCount + 1 : Math.max(0, prev.favoriteCount - 1)
-        }))
-      })
-      .catch((err) => {
-        alert('Vui lòng đăng nhập để lưu tác phẩm vào Tủ sách yêu thích!')
-      })
+  const handleToggleFavorite = async () => {
+    try {
+      const res = await interactionApi.toggleFavorite(slug)
+      setInteractionStatus((prev) => ({
+        ...prev,
+        isFavorite: res.isFavorite,
+        favoriteCount: res.favoriteCount,
+      }))
+    } catch (err) {
+      alert(err.message || 'Vui lòng đăng nhập để lưu tủ sách!')
+    }
   }
 
-  const handleSubmitRating = (e) => {
+  const handleSubmitRating = async (e) => {
     e.preventDefault()
     setIsSubmittingRating(true)
-    setRatingSuccessMsg('')
-
-    interactionApi.rateNovel(slug, selectedScore, reviewInput.trim())
-      .then((newRating) => {
-        setRatingSuccessMsg('Cảm ơn bạn đã gửi đánh giá!')
-        setInteractionStatus((prev) => ({ ...prev, userRating: selectedScore, userReview: reviewInput.trim() }))
-        // Refresh novel detail & ratings list
-        catalogApi.novel(slug).then(setNovel).catch(() => {})
-        interactionApi.getRatings(slug).then(setRatingsList).catch(() => {})
-      })
-      .catch((err) => {
-        alert(err.message || 'Vui lòng đăng nhập để đánh giá tác phẩm này!')
-      })
-      .finally(() => setIsSubmittingRating(false))
+    try {
+      const res = await interactionApi.rateNovel(slug, selectedScore, reviewInput)
+      setRatingSuccessMsg('Cảm ơn bạn đã gửi đánh giá!')
+      setInteractionStatus((prev) => ({
+        ...prev,
+        userRating: res.score,
+        userReview: res.reviewText,
+      }))
+      interactionApi.getRatings(slug).then((ratings) => setRatingsList(ratings || []))
+      catalogApi.novel(slug).then(setNovel)
+      setTimeout(() => setRatingSuccessMsg(''), 3000)
+    } catch (err) {
+      alert(err.message || 'Vui lòng đăng nhập để đánh giá tác phẩm!')
+    } finally {
+      setIsSubmittingRating(false)
+    }
   }
-
-  const [imgError, setImgError] = useState(false)
 
   if (error) {
     return (
-      <section className="simple-page">
-        <p className="eyebrow">Không tìm thấy</p>
-        <h1>{error}</h1>
+      <section className="empty-state">
+        <h2>Chưa tải được thông tin tác phẩm.</h2>
+        <p>{error}</p>
         <Link className="button" to="/">Về Trang chủ</Link>
       </section>
     )
@@ -105,7 +115,6 @@ export default function NovelDetailPage() {
   if (!novel) return <div className="route-loader" aria-label="Đang tải" />
 
   const firstChapter = chapters.length > 0 ? chapters[0] : null
-
   const coverUrl = getNovelCoverUrl(novel)
 
   return (
@@ -121,14 +130,12 @@ export default function NovelDetailPage() {
             style={{ width: '220px', height: '320px', objectFit: 'cover', borderRadius: '12px' }}
           />
         ) : (
-
           <div className={`novel-detail-cover cover-tone-${(novel.id % 4) + 1}`}>
             <span>NovelScout Selection</span>
             <strong>{novel.title}</strong>
             <small>{novel.authorName}</small>
           </div>
         )}
-
 
         <div className="novel-detail-copy">
           <p className="eyebrow">{statusLabels[novel.status] || novel.status} · ★ {Number(novel.averageRating).toFixed(1)} ({novel.ratingCount} lượt đánh giá)</p>
@@ -159,144 +166,75 @@ export default function NovelDetailPage() {
                 )}
               </>
             ) : (
-              <button className="button" disabled>Chưa có chương nào</button>
+              <span className="button disabled">Truyện đang cập nhật</span>
             )}
 
-            {/* Favorite Toggle Button */}
             <button
+              className={`button secondary favorite-toggle ${interactionStatus.isFavorite ? 'is-favorite' : ''}`}
               onClick={handleToggleFavorite}
               style={{
-                padding: '0.65rem 1.2rem',
-                borderRadius: '999px',
-                border: interactionStatus.isFavorite ? '2px solid #e53e3e' : '1px solid #cbd5e0',
-                backgroundColor: interactionStatus.isFavorite ? '#fff5f5' : '#ffffff',
-                color: interactionStatus.isFavorite ? '#e53e3e' : '#4a5568',
-                cursor: 'pointer',
-                fontWeight: 600,
-                fontSize: '0.9rem',
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
-                gap: '0.4rem',
-                transition: 'all 0.2s ease'
+                gap: '0.5rem',
+                backgroundColor: interactionStatus.isFavorite ? '#fff5f5' : undefined,
+                borderColor: interactionStatus.isFavorite ? '#e53e3e' : undefined,
+                color: interactionStatus.isFavorite ? '#e53e3e' : undefined,
               }}
             >
-              {interactionStatus.isFavorite ? '❤️ Đã yêu thích' : '🤍 Yêu thích'} ({interactionStatus.favoriteCount})
+              {interactionStatus.isFavorite ? '❤️ Đã lưu Tủ sách' : '🤍 Lưu vào Tủ sách'}
+              <span className="fav-count">({interactionStatus.favoriteCount})</span>
             </button>
-
-            <span style={{ color: '#718096', fontSize: '0.9rem' }}>
-              👁️ {novel.viewCount.toLocaleString('vi-VN')} lượt đọc · 📚 {chapters.length} chương
-            </span>
           </div>
         </div>
       </div>
 
-      {/* Chapters List Section */}
-      <div className="novel-chapters-section" style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid #e2e8f0' }}>
-        <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>Danh sách chương ({chapters.length})</h2>
-        {chapters.length === 0 ? (
-          <p style={{ color: '#718096' }}>Truyện hiện chưa có chương nào được cập nhật.</p>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '0.75rem' }}>
-            {chapters.map((ch) => (
-              <Link
-                key={ch.id}
-                to={`/truyen/${slug}/chuong-${ch.chapterNumber}`}
-                style={{
-                  padding: '0.75rem 1rem',
-                  borderRadius: '8px',
-                  border: '1px solid #e2e8f0',
-                  textDecoration: 'none',
-                  color: '#2d3748',
-                  backgroundColor: lastRead?.chapterNumber === ch.chapterNumber ? '#edf2f7' : '#ffffff',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                <span style={{ fontWeight: 500, fontSize: '0.95rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  Chương {ch.chapterNumber}: {ch.title}
+      {/* Interactive Rating & Review Section */}
+      <div className="novel-rating-section" style={{ marginTop: '3rem', padding: '2rem', backgroundColor: '#fcfbf7', borderRadius: '16px', border: '1px solid #eae7dc' }}>
+        <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#102a20' }}>Đánh giá & Nhận xét từ độc giả</h2>
+        
+        {/* Rating Form */}
+        <form onSubmit={handleSubmitRating} style={{ marginBottom: '2.5rem', paddingBottom: '2rem', borderBottom: '1px solid #eae7dc' }}>
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Đánh giá của bạn về tác phẩm:</label>
+            <div style={{ display: 'flex', gap: '0.5rem', fontSize: '1.8rem', cursor: 'pointer' }}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <span
+                  key={star}
+                  onClick={() => setSelectedScore(star)}
+                  onMouseEnter={() => setHoverScore(star)}
+                  onMouseLeave={() => setHoverScore(0)}
+                  style={{ color: star <= (hoverScore || selectedScore) ? '#f59e0b' : '#cbd5e1', transition: 'color 0.2s' }}
+                >
+                  ★
                 </span>
-                {lastRead?.chapterNumber === ch.chapterNumber && (
-                  <span style={{ fontSize: '0.75rem', backgroundColor: '#3182ce', color: '#fff', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>Đang đọc</span>
-                )}
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* User Reviews & Rating Section */}
-      <div className="novel-reviews-section" style={{ marginTop: '3.5rem', paddingTop: '2rem', borderTop: '1px solid #e2e8f0' }}>
-        <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>
-          Đánh giá & Nhận xét độc giả ({ratingsList.length})
-        </h2>
-
-        {/* Rating Submission Form */}
-        <form
-          onSubmit={handleSubmitRating}
-          style={{
-            backgroundColor: '#f8fafc',
-            border: '1px solid #e2e8f0',
-            borderRadius: '12px',
-            padding: '1.5rem',
-            marginBottom: '2.5rem'
-          }}
-        >
-          <h3 style={{ fontSize: '1.1rem', marginBottom: '0.75rem' }}>
-            {interactionStatus.userRating ? 'Cập nhật đánh giá của bạn:' : 'Viết đánh giá của bạn:'}
-          </h3>
-
-          {/* Interactive Star Picker */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '1rem' }}>
-            {[1, 2, 3, 4, 5].map((star) => (
-              <span
-                key={star}
-                onMouseEnter={() => setHoverScore(star)}
-                onMouseLeave={() => setHoverScore(0)}
-                onClick={() => setSelectedScore(star)}
-                style={{
-                  fontSize: '1.8rem',
-                  cursor: 'pointer',
-                  color: star <= (hoverScore || selectedScore) ? '#ecc94b' : '#cbd5e0',
-                  transition: 'color 0.15s ease'
-                }}
-              >
-                ★
+              ))}
+              <span style={{ fontSize: '1rem', alignSelf: 'center', color: '#64748b', marginLeft: '0.5rem' }}>
+                ({hoverScore || selectedScore}/5 sao)
               </span>
-            ))}
-            <span style={{ marginLeft: '0.75rem', fontWeight: 600, color: '#4a5568' }}>
-              {hoverScore || selectedScore} / 5 sao
-            </span>
+            </div>
           </div>
 
-          {/* Optional Review Text Input */}
-          <textarea
-            rows="3"
-            value={reviewInput}
-            onChange={(e) => setReviewInput(e.target.value)}
-            placeholder="Viết nhận xét của bạn về tác phẩm này (không bắt buộc)..."
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              borderRadius: '8px',
-              border: '1px solid #cbd5e0',
-              fontSize: '0.95rem',
-              fontFamily: 'inherit',
-              resize: 'vertical',
-              marginBottom: '1rem'
-            }}
-          />
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Nhận xét (không bắt buộc):</label>
+            <textarea
+              rows="3"
+              value={reviewInput}
+              onChange={(e) => setReviewInput(e.target.value)}
+              placeholder="Chia sẻ cảm nghĩ của bạn về tác phẩm này với cộng đồng độc giả..."
+              style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.95rem' }}
+            />
+          </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <button className="button" type="submit" disabled={isSubmittingRating}>
               {isSubmittingRating ? 'Đang gửi...' : 'Gửi đánh giá'}
             </button>
-            {ratingSuccessMsg && <span style={{ color: '#38a169', fontWeight: 600, fontSize: '0.9rem' }}>{ratingSuccessMsg}</span>}
+            {ratingSuccessMsg && <span style={{ color: '#059669', fontWeight: 600 }}>{ratingSuccessMsg}</span>}
           </div>
         </form>
 
         {/* Reviews List */}
+        <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Tất cả đánh giá ({ratingsList.length})</h3>
         {ratingsList.length === 0 ? (
           <p style={{ color: '#718096', textAlign: 'center', padding: '2rem 0' }}>
             Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá tác phẩm này!
@@ -351,6 +289,71 @@ export default function NovelDetailPage() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Similar Novels Section (Content-Based Recommendations) */}
+      {similarNovels.length > 0 && (
+        <div className="similar-novels-section" style={{ marginTop: '3.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '1.5rem' }}>
+            <h2 style={{ fontSize: '1.5rem', color: '#102a20', margin: 0 }}>📚 Tác phẩm tương tự có thể bạn thích</h2>
+            <span style={{ fontSize: '0.875rem', color: '#64748b' }}>Dựa trên thuật toán Lọc theo nội dung (Content-Based)</span>
+          </div>
+
+          <div className="recommendation-grid">
+            {similarNovels.map((rec) => (
+              <div key={rec.novel.id} className="rec-card">
+                <div className="rec-badge-overlay">
+                  <span className="match-badge">⚡ {rec.matchPercentage}% Tương đồng</span>
+                </div>
+                <Link to={`/truyen/${rec.novel.slug}`} className="rec-cover-link">
+                  <NovelCover novel={rec.novel} />
+                </Link>
+                <div className="rec-card-body">
+                  <Link to={`/truyen/${rec.novel.slug}`} className="rec-title">
+                    {rec.novel.title}
+                  </Link>
+                  <div className="rec-author">{rec.novel.authorName}</div>
+                  <div className="rec-meta">
+                    <span>★ {Number(rec.novel.averageRating || 4.0).toFixed(1)}</span>
+                    <span>👁️ {rec.novel.viewCount?.toLocaleString('vi-VN') || 0}</span>
+                  </div>
+                  <div className="category-list">
+                    {rec.novel.categories?.slice(0, 2).map((cat) => (
+                      <span key={cat.id}>{cat.name}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="chapter-list-section" style={{ marginTop: '3rem' }}>
+        <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Danh sách chương ({chapters.length})</h2>
+        <div className="chapter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '0.75rem' }}>
+          {chapters.map((ch) => (
+            <Link
+              key={ch.id}
+              to={`/truyen/${slug}/chuong-${ch.chapterNumber}`}
+              className="chapter-item"
+              style={{
+                padding: '0.75rem 1rem',
+                borderRadius: '8px',
+                border: '1px solid #e2e8f0',
+                textDecoration: 'none',
+                color: '#2d3748',
+                display: 'flex',
+                justify: 'space-between',
+                alignItems: 'center',
+                backgroundColor: '#ffffff'
+              }}
+            >
+              <span style={{ fontWeight: 500 }}>Chương {ch.chapterNumber}: {ch.title}</span>
+              <span style={{ fontSize: '0.8rem', color: '#a0aec0' }}>→</span>
+            </Link>
+          ))}
+        </div>
       </div>
     </section>
   )
