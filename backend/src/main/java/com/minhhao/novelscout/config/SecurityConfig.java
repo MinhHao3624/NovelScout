@@ -31,12 +31,13 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(csrfTokenRepository)
-                        .ignoringRequestMatchers("/api/auth/send-otp", "/api/auth/register-with-otp", "/api/auth/register", "/api/auth/login", "/api/auth/google")
+                        .ignoringRequestMatchers("/api/auth/send-otp", "/api/auth/register-with-otp", "/api/auth/register", "/api/auth/login", "/api/auth/google", "/api/novels/**", "/api/comments/**")
                         .spa())
                 .securityContext(context -> context
                         .requireExplicitSave(true)
                         .securityContextRepository(contextRepository))
                 .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/api/auth/me").authenticated()
                         .requestMatchers("/actuator/health", "/api/public/**", "/api/auth/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())

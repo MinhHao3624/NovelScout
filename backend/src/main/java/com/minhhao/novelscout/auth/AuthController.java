@@ -134,6 +134,9 @@ public class AuthController {
 
     @GetMapping("/me")
     AuthUserResponse me(Authentication authentication) {
-        return authService.getCurrentUser(((CustomUserPrincipal) authentication.getPrincipal()).id());
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserPrincipal principal)) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "UNAUTHENTICATED", "Phiên đăng nhập không hợp lệ");
+        }
+        return authService.getCurrentUser(principal.id());
     }
 }

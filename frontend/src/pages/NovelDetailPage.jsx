@@ -4,6 +4,7 @@ import { catalogApi, getNovelCoverUrl } from '../api/catalog.js'
 import { interactionApi } from '../api/interaction.js'
 import { getSimilarNovels } from '../api/recommendation.js'
 import NovelCover from '../components/NovelCover.jsx'
+import CommentSection from '../components/CommentSection.jsx'
 
 const statusLabels = { ONGOING: 'Đang ra', COMPLETED: 'Hoàn thành', HIATUS: 'Tạm dừng' }
 
@@ -23,6 +24,7 @@ export default function NovelDetailPage() {
   const [reviewInput, setReviewInput] = useState('')
   const [isSubmittingRating, setIsSubmittingRating] = useState(false)
   const [ratingSuccessMsg, setRatingSuccessMsg] = useState('')
+  const [showAllReviews, setShowAllReviews] = useState(false)
 
   // Similar Novels State
   const [similarNovels, setSimilarNovels] = useState([])
@@ -116,10 +118,13 @@ export default function NovelDetailPage() {
 
   const firstChapter = chapters.length > 0 ? chapters[0] : null
   const coverUrl = getNovelCoverUrl(novel)
+  const visibleReviews = showAllReviews ? ratingsList : ratingsList.slice(0, 2)
 
   return (
     <section className="novel-detail-page">
       <Link className="back-link" to="/tim-kiem">← Trở lại kho truyện</Link>
+      
+      {/* 1. HERO SECTION */}
       <div className="novel-detail-hero">
         {coverUrl && !imgError ? (
           <img
@@ -188,14 +193,45 @@ export default function NovelDetailPage() {
         </div>
       </div>
 
-      {/* Interactive Rating & Review Section */}
-      <div className="novel-rating-section" style={{ marginTop: '3rem', padding: '2rem', backgroundColor: '#fcfbf7', borderRadius: '16px', border: '1px solid #eae7dc' }}>
-        <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#102a20' }}>Đánh giá & Nhận xét từ độc giả</h2>
+      {/* 2. DANH SÁCH CHƯƠNG */}
+      <div className="chapter-list-section" style={{ marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid #e2e8f0' }}>
+        <h2 style={{ fontSize: '1.4rem', marginBottom: '1.25rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          📑 Danh sách chương ({chapters.length})
+        </h2>
+        <div className="chapter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '0.75rem' }}>
+          {chapters.map((ch) => (
+            <Link
+              key={ch.id}
+              to={`/truyen/${slug}/chuong-${ch.chapterNumber}`}
+              className="chapter-item"
+              style={{
+                padding: '0.75rem 1rem',
+                borderRadius: '8px',
+                border: '1px solid #e2e8f0',
+                textDecoration: 'none',
+                color: '#2d3748',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                backgroundColor: '#ffffff',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
+              }}
+            >
+              <span style={{ fontWeight: 500 }}>Chương {ch.chapterNumber}: {ch.title}</span>
+              <span style={{ fontSize: '0.8rem', color: '#a0aec0' }}>→</span>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      {/* 3. ĐÁNH GIÁ & NHẬN XÉT (Sổ dọc thu gọn) */}
+      <div className="novel-rating-section" style={{ marginTop: '3rem', padding: '1.75rem', backgroundColor: '#fcfbf7', borderRadius: '16px', border: '1px solid #eae7dc' }}>
+        <h2 style={{ fontSize: '1.35rem', marginBottom: '1rem', color: '#102a20' }}>⭐ Đánh giá & Nhận xét từ độc giả</h2>
         
         {/* Rating Form */}
-        <form onSubmit={handleSubmitRating} style={{ marginBottom: '2.5rem', paddingBottom: '2rem', borderBottom: '1px solid #eae7dc' }}>
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Đánh giá của bạn về tác phẩm:</label>
+        <form onSubmit={handleSubmitRating} style={{ marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid #eae7dc' }}>
+          <div style={{ marginBottom: '0.75rem' }}>
+            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', fontSize: '0.95rem' }}>Đánh giá của bạn về tác phẩm:</label>
             <div style={{ display: 'flex', gap: '0.5rem', fontSize: '1.8rem', cursor: 'pointer' }}>
               {[1, 2, 3, 4, 5].map((star) => (
                 <span
@@ -208,95 +244,141 @@ export default function NovelDetailPage() {
                   ★
                 </span>
               ))}
-              <span style={{ fontSize: '1rem', alignSelf: 'center', color: '#64748b', marginLeft: '0.5rem' }}>
+              <span style={{ fontSize: '0.9rem', alignSelf: 'center', color: '#64748b', marginLeft: '0.5rem' }}>
                 ({hoverScore || selectedScore}/5 sao)
               </span>
             </div>
           </div>
 
           <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Nhận xét (không bắt buộc):</label>
+            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', fontSize: '0.95rem' }}>Nhận xét (không bắt buộc):</label>
             <textarea
-              rows="3"
+              rows="2"
               value={reviewInput}
               onChange={(e) => setReviewInput(e.target.value)}
-              placeholder="Chia sẻ cảm nghĩ của bạn về tác phẩm này với cộng đồng độc giả..."
+              placeholder="Chia sẻ cảm nghĩ của bạn về tác phẩm..."
               style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.95rem' }}
             />
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <button className="button" type="submit" disabled={isSubmittingRating}>
+            <button className="button" type="submit" disabled={isSubmittingRating} style={{ padding: '8px 18px', fontSize: '0.9rem' }}>
               {isSubmittingRating ? 'Đang gửi...' : 'Gửi đánh giá'}
             </button>
-            {ratingSuccessMsg && <span style={{ color: '#059669', fontWeight: 600 }}>{ratingSuccessMsg}</span>}
+            {ratingSuccessMsg && <span style={{ color: '#059669', fontWeight: 600, fontSize: '0.9rem' }}>{ratingSuccessMsg}</span>}
           </div>
         </form>
 
+        {/* Collapsible Reviews Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h3 style={{ fontSize: '1.1rem', margin: 0, color: '#334155' }}>
+            Tất cả nhận xét ({ratingsList.length})
+          </h3>
+          {ratingsList.length > 2 && (
+            <button
+              type="button"
+              onClick={() => setShowAllReviews(!showAllReviews)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#0284c7',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontSize: '0.9rem'
+              }}
+            >
+              {showAllReviews ? '▲ Thu gọn danh sách' : `▼ Xem tất cả (${ratingsList.length} đánh giá)`}
+            </button>
+          )}
+        </div>
+
         {/* Reviews List */}
-        <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Tất cả đánh giá ({ratingsList.length})</h3>
         {ratingsList.length === 0 ? (
-          <p style={{ color: '#718096', textAlign: 'center', padding: '2rem 0' }}>
-            Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá tác phẩm này!
+          <p style={{ color: '#718096', textAlign: 'center', padding: '1rem 0', margin: 0, fontStyle: 'italic', fontSize: '0.9rem' }}>
+            Chưa có nhận xét nào. Hãy là người đầu tiên để lại nhận xét!
           </p>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {ratingsList.map((r) => (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {visibleReviews.map((r) => (
               <div
                 key={r.id}
                 style={{
-                  padding: '1.25rem',
+                  padding: '1rem 1.25rem',
                   borderRadius: '10px',
                   border: '1px solid #edf2f7',
                   backgroundColor: '#ffffff'
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <div
                       style={{
-                        width: '36px',
-                        height: '36px',
+                        width: '32px',
+                        height: '32px',
                         borderRadius: '50%',
                         backgroundColor: '#1d5b43',
                         color: '#d7ed74',
                         display: 'grid',
                         placeItems: 'center',
                         fontWeight: 700,
-                        fontSize: '0.9rem'
+                        fontSize: '0.85rem'
                       }}
                     >
                       {r.userDisplayName ? r.userDisplayName.charAt(0).toUpperCase() : 'U'}
                     </div>
                     <div>
-                      <strong style={{ display: 'block', fontSize: '0.95rem' }}>{r.userDisplayName}</strong>
-                      <span style={{ color: '#ecc94b', fontSize: '0.9rem' }}>
+                      <strong style={{ display: 'block', fontSize: '0.9rem' }}>{r.userDisplayName}</strong>
+                      <span style={{ color: '#ecc94b', fontSize: '0.85rem' }}>
                         {'★'.repeat(r.score)}{'☆'.repeat(5 - r.score)} ({r.score}/5)
                       </span>
                     </div>
                   </div>
-                  <span style={{ fontSize: '0.8rem', color: '#a0aec0' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#a0aec0' }}>
                     {new Date(r.createdAt).toLocaleDateString('vi-VN')}
                   </span>
                 </div>
 
                 {r.reviewText && (
-                  <p style={{ margin: '0.5rem 0 0 0', color: '#4a5568', fontSize: '0.95rem', lineHeight: '1.6' }}>
+                  <p style={{ margin: '0.35rem 0 0 0', color: '#4a5568', fontSize: '0.9rem', lineHeight: '1.5' }}>
                     {r.reviewText}
                   </p>
                 )}
               </div>
             ))}
+
+            {!showAllReviews && ratingsList.length > 2 && (
+              <button
+                type="button"
+                onClick={() => setShowAllReviews(true)}
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  borderRadius: '8px',
+                  border: '1px dashed #cbd5e1',
+                  background: '#ffffff',
+                  color: '#0284c7',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  marginTop: '4px'
+                }}
+              >
+                ▼ Xem thêm {ratingsList.length - 2} đánh giá khác...
+              </button>
+            )}
           </div>
         )}
       </div>
 
-      {/* Similar Novels Section (Content-Based Recommendations) */}
+      {/* 4. PHÂN HỆ THẢO LUẬN & BÌNH LUẬN ĐA CẤP */}
+      <CommentSection novelId={novel.id} />
+
+      {/* 5. TÁC PHẨM TƯƠNG TỰ (Đã được chuyển xuống DƯỚI CÙNG TRANG) */}
       {similarNovels.length > 0 && (
-        <div className="similar-novels-section" style={{ marginTop: '3.5rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '1.5rem' }}>
-            <h2 style={{ fontSize: '1.5rem', color: '#102a20', margin: 0 }}>📚 Tác phẩm tương tự có thể bạn thích</h2>
-            <span style={{ fontSize: '0.875rem', color: '#64748b' }}>Dựa trên thuật toán Lọc theo nội dung (Content-Based)</span>
+        <div className="similar-novels-section" style={{ marginTop: '3.5rem', paddingTop: '2rem', borderTop: '1px solid #e2e8f0' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '1.25rem' }}>
+            <h2 style={{ fontSize: '1.4rem', color: '#102a20', margin: 0 }}>📚 Tác phẩm tương tự có thể bạn thích</h2>
+            <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Dựa trên thuật toán Lọc theo nội dung (Content-Based)</span>
           </div>
 
           <div className="recommendation-grid">
@@ -328,33 +410,6 @@ export default function NovelDetailPage() {
           </div>
         </div>
       )}
-
-      <div className="chapter-list-section" style={{ marginTop: '3rem' }}>
-        <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Danh sách chương ({chapters.length})</h2>
-        <div className="chapter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '0.75rem' }}>
-          {chapters.map((ch) => (
-            <Link
-              key={ch.id}
-              to={`/truyen/${slug}/chuong-${ch.chapterNumber}`}
-              className="chapter-item"
-              style={{
-                padding: '0.75rem 1rem',
-                borderRadius: '8px',
-                border: '1px solid #e2e8f0',
-                textDecoration: 'none',
-                color: '#2d3748',
-                display: 'flex',
-                justify: 'space-between',
-                alignItems: 'center',
-                backgroundColor: '#ffffff'
-              }}
-            >
-              <span style={{ fontWeight: 500 }}>Chương {ch.chapterNumber}: {ch.title}</span>
-              <span style={{ fontSize: '0.8rem', color: '#a0aec0' }}>→</span>
-            </Link>
-          ))}
-        </div>
-      </div>
     </section>
   )
 }
