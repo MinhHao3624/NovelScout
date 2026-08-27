@@ -7,6 +7,7 @@ import java.time.Instant;
 
 public record ChapterDetailResponse(
         Long id,
+        Long novelId,
         String novelSlug,
         String novelTitle,
         BigDecimal chapterNumber,
@@ -21,6 +22,7 @@ public record ChapterDetailResponse(
     public static ChapterDetailResponse of(Chapter chapter, BigDecimal prevChapterNumber, BigDecimal nextChapterNumber, long totalChapters) {
         return new ChapterDetailResponse(
                 chapter.getId(),
+                chapter.getNovel().getId(),
                 chapter.getNovel().getSlug(),
                 chapter.getNovel().getTitle(),
                 chapter.getChapterNumber(),

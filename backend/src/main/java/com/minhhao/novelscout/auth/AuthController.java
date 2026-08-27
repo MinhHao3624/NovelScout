@@ -1,10 +1,8 @@
 package com.minhhao.novelscout.auth;
 
-import com.minhhao.novelscout.auth.dto.AuthUserResponse;
-import com.minhhao.novelscout.auth.dto.CsrfResponse;
-import com.minhhao.novelscout.auth.dto.LoginRequest;
-import com.minhhao.novelscout.auth.dto.RegisterRequest;
+import com.minhhao.novelscout.auth.dto.*;
 import com.minhhao.novelscout.common.api.ApiException;
+import com.minhhao.novelscout.user.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -21,26 +19,30 @@ import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
     private final AuthService authService;
+    private final GoogleAuthService googleAuthService;
     private final AuthenticationManager authenticationManager;
     private final SecurityContextRepository securityContextRepository;
     private final SessionAuthenticationStrategy sessionAuthenticationStrategy;
     private final CsrfTokenRepository csrfTokenRepository;
 
-    public AuthController(AuthService authService, AuthenticationManager authenticationManager,
-                          SecurityContextRepository securityContextRepository,
-                          SessionAuthenticationStrategy sessionAuthenticationStrategy,
-                          CsrfTokenRepository csrfTokenRepository) {
+    public AuthController(
+            AuthService authService,
+            GoogleAuthService googleAuthService,
+            AuthenticationManager authenticationManager,
+            SecurityContextRepository securityContextRepository,
+            SessionAuthenticationStrategy sessionAuthenticationStrategy,
+            CsrfTokenRepository csrfTokenRepository
+    ) {
         this.authService = authService;
+        this.googleAuthService = googleAuthService;
         this.authenticationManager = authenticationManager;
         this.securityContextRepository = securityContextRepository;
         this.sessionAuthenticationStrategy = sessionAuthenticationStrategy;
@@ -50,6 +52,54 @@ public class AuthController {
     @GetMapping("/csrf")
     CsrfResponse csrf(CsrfToken csrfToken) {
         return new CsrfResponse(csrfToken.getHeaderName(), csrfToken.getToken());
+    }
+
+    @PostMapping("/send-otp")
+    ResponseEntity<Map<String, String>> sendOtp(@Valid @RequestBody SendOtpRequest request) {
+        authService.sendOtp(request);
+        return ResponseEntity.ok(Map.of("message", "Mã xác thực OTP đã được gửi đến hòm thư " + request.email()));
+    }
+
+    @PostMapping("/register-with-otp")
+    ResponseEntity<AuthUserResponse> registerWithOtp(
+            @Valid @RequestBody RegisterWithOtpRequest request,
+            HttpServletRequest httpRequest, HttpServletResponse httpResponse
+    ) {
+        AuthUserResponse userResponse = authService.registerWithOtp(request);
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    UsernamePasswordAuthenticationToken.unauthenticated(request.username(), request.password()));
+            sessionAuthenticationStrategy.onAuthentication(authentication, httpRequest, httpResponse);
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(authentication);
+            SecurityContextHolder.setContext(context);
+            securityContextRepository.saveContext(context, httpRequest, httpResponse);
+            csrfTokenRepository.saveToken(null, httpRequest, httpResponse);
+        } catch (Exception e) {
+            // Do not break flow if auto-login fails
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
+    }
+
+    @PostMapping("/google")
+    ResponseEntity<AuthUserResponse> googleLogin(
+            @Valid @RequestBody GoogleAuthRequest request,
+            HttpServletRequest httpRequest, HttpServletResponse httpResponse
+    ) {
+        User user = googleAuthService.authenticateGoogleUser(request.credential());
+        CustomUserPrincipal principal = CustomUserPrincipal.from(user);
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                principal,
+                null,
+                principal.getAuthorities()
+        );
+        sessionAuthenticationStrategy.onAuthentication(authentication, httpRequest, httpResponse);
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(authentication);
+        SecurityContextHolder.setContext(context);
+        securityContextRepository.saveContext(context, httpRequest, httpResponse);
+        csrfTokenRepository.saveToken(null, httpRequest, httpResponse);
+        return ResponseEntity.ok(AuthUserResponse.from(user));
     }
 
     @PostMapping("/register")
@@ -84,6 +134,9 @@ public class AuthController {
 
     @GetMapping("/me")
     AuthUserResponse me(Authentication authentication) {
-        return authService.getCurrentUser(((CustomUserPrincipal) authentication.getPrincipal()).id());
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserPrincipal principal)) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "UNAUTHENTICATED", "Phiên đăng nhập không hợp lệ");
+        }
+        return authService.getCurrentUser(principal.id());
     }
 }

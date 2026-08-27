@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { catalogApi } from '../api/catalog.js'
+import CommentSection from '../components/CommentSection.jsx'
 
 const THEMES = {
   light: { name: 'Trắng', bg: '#ffffff', text: '#1a202c', border: '#e2e8f0', toolbarBg: '#f8fafc' },
@@ -20,7 +21,6 @@ export default function ChapterReaderPage() {
   const rawNum = paramChapterNumber || chapterPath || ''
   const chapterNumber = rawNum.replace(/^chuong-?/, '')
   const navigate = useNavigate()
-
 
   const [chapter, setChapter] = useState(null)
   const [chaptersList, setChaptersList] = useState([])
@@ -131,7 +131,7 @@ export default function ChapterReaderPage() {
     <div
       style={{
         display: 'flex',
-        justifyContent: 'space-between',
+        justify: 'space-between',
         alignItems: 'center',
         flexWrap: 'wrap',
         gap: '1rem'
@@ -190,7 +190,6 @@ export default function ChapterReaderPage() {
       </button>
     </div>
   )
-
 
   return (
     <div
@@ -379,8 +378,14 @@ export default function ChapterReaderPage() {
             💡 Mẹo: Bạn có thể dùng phím <strong>←</strong> và <strong>→</strong> trên bàn phím để chuyển chương nhanh.
           </p>
         </div>
+
+        {/* Chapter-Specific Comment Section */}
+        <CommentSection
+          novelId={chapter.novelId}
+          chapterId={chapter.id}
+          chapterNumber={chapter.chapterNumber}
+        />
       </main>
     </div>
   )
 }
-

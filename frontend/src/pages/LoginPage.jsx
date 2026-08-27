@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/authContext.js'
+import GoogleLoginButton from '../components/GoogleLoginButton.jsx'
 
 export default function LoginPage() {
   const { user, login } = useAuth()
@@ -48,6 +49,13 @@ export default function LoginPage() {
         {location.state?.registered && <div className="form-notice success">Tạo tài khoản thành công. Đăng nhập để bắt đầu nhé.</div>}
         {location.state?.passwordChanged && <div className="form-notice success">Đổi mật khẩu thành công. Hãy đăng nhập lại nhé.</div>}
         {error && <div className="form-notice error" role="alert">{error}</div>}
+
+        <GoogleLoginButton onError={(err) => setError(err)} />
+
+        <div className="divider-line" style={{ margin: '16px 0', textTransform: 'uppercase', fontSize: '0.75rem', color: '#94a3b8', textAlign: 'center' }}>
+          <span>HOẶC ĐĂNG NHẬP VỚI MẬT KHẨU</span>
+        </div>
+
         <form className="auth-form" onSubmit={handleSubmit}>
           <label>Email hoặc tên đăng nhập
             <input autoFocus autoComplete="username" name="login" required value={form.login}

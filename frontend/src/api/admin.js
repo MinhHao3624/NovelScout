@@ -71,3 +71,29 @@ export function deleteAdminChapter(chapterId) {
     method: 'DELETE',
   });
 }
+
+/* Admin Recommendation Endpoints */
+export function getAdminRecommendationConfig() {
+  return apiRequest('/admin/recommendations/config');
+}
+
+export function updateAdminRecommendationConfig(data) {
+  return apiRequest('/admin/recommendations/config', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export function getAdminRecommendationMetrics() {
+  return apiRequest('/admin/recommendations/metrics');
+}
+
+export function recalculateRecommendationMatrix() {
+  return apiRequest('/admin/recommendations/recalculate', {
+    method: 'POST',
+  });
+}
+
+export function simulateRecommendationForUser(userId, limit = 10) {
+  return apiRequest(`/admin/recommendations/simulate?userId=${userId}&limit=${limit}`);
+}

@@ -97,6 +97,26 @@ public class User {
         return user;
     }
 
+    public static User createGoogleUser(
+            String email,
+            String username,
+            String passwordHash,
+            String displayName,
+            String avatarUrl,
+            Role readerRole
+    ) {
+        User user = new User();
+        user.email = email;
+        user.username = username;
+        user.passwordHash = passwordHash;
+        user.displayName = displayName;
+        user.avatarUrl = avatarUrl;
+        user.status = UserStatus.ACTIVE;
+        user.roles.add(readerRole);
+        return user;
+    }
+
+
 
     @PreUpdate
     void updateTimestamp() {

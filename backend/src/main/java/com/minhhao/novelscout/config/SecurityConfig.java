@@ -29,13 +29,16 @@ public class SecurityConfig {
                                             CsrfTokenRepository csrfTokenRepository) throws Exception {
         return http
                 .cors(Customizer.withDefaults())
-                .csrf(csrf -> csrf.csrfTokenRepository(csrfTokenRepository).spa())
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(csrfTokenRepository)
+                        .ignoringRequestMatchers("/api/auth/send-otp", "/api/auth/register-with-otp", "/api/auth/register", "/api/auth/login", "/api/auth/google", "/api/novels/**", "/api/comments/**")
+                        .spa())
                 .securityContext(context -> context
                         .requireExplicitSave(true)
                         .securityContextRepository(contextRepository))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/actuator/health", "/api/public/**", "/api/auth/csrf",
-                                "/api/auth/register", "/api/auth/login").permitAll()
+                        .requestMatchers("/api/auth/me").authenticated()
+                        .requestMatchers("/actuator/health", "/api/public/**", "/api/auth/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .formLogin(form -> form.disable())

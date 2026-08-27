@@ -9,7 +9,7 @@ import BookshelfPage from './pages/BookshelfPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import NotFoundPage from './pages/NotFoundPage.jsx'
 import NovelDetailPage from './pages/NovelDetailPage.jsx'
-import PlaceholderPage from './pages/PlaceholderPage.jsx'
+import RecommendationPage from './pages/RecommendationPage.jsx'
 import ProfilePage from './pages/ProfilePage.jsx'
 import RegisterPage from './pages/RegisterPage.jsx'
 
@@ -18,6 +18,7 @@ import AdminLayout from './admin/AdminLayout.jsx'
 import AdminDashboardPage from './admin/AdminDashboardPage.jsx'
 import AdminNovelListPage from './admin/AdminNovelListPage.jsx'
 import AdminChapterListPage from './admin/AdminChapterListPage.jsx'
+import AdminRecommendationPage from './admin/AdminRecommendationPage.jsx'
 
 import './App.css'
 
@@ -31,13 +32,14 @@ export default function App() {
         <Route path="truyen/:slug/chuong/:chapterNumber" element={<ChapterReaderPage />} />
         <Route path="truyen/:slug/:chapterPath" element={<ChapterReaderPage />} />
         <Route path="dang-nhap" element={<LoginPage />} />
-
         <Route path="dang-ky" element={<RegisterPage />} />
+
         <Route element={<ProtectedRoute />}>
           <Route path="ho-so" element={<ProfilePage />} />
           <Route path="tu-sach" element={<BookshelfPage />} />
-          <Route path="goi-y" element={<PlaceholderPage title="Gợi ý cho bạn" />} />
+          <Route path="goi-y" element={<RecommendationPage />} />
         </Route>
+
         <Route path="*" element={<NotFoundPage />} />
       </Route>
 
@@ -47,6 +49,7 @@ export default function App() {
           <Route index element={<AdminDashboardPage />} />
           <Route path="novels" element={<AdminNovelListPage />} />
           <Route path="novels/:novelId/chapters" element={<AdminChapterListPage />} />
+          <Route path="recommendations" element={<AdminRecommendationPage />} />
         </Route>
       </Route>
     </Routes>
